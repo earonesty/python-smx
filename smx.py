@@ -2,7 +2,7 @@
 
 """Simple python macro expansion"""
 
-__version__ = "0.8"
+__version__ = "0.8.2"
 
 import os, sys, io
 
