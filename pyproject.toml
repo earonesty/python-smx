@@ -1,0 +1,11 @@
+[build-system]
+requires = ["flit"]
+build-backend = "flit.buildapi"
+
+[tool.flit.metadata]
+module = "smx"
+author = "Erik Aronesty"
+author-email = "erik@q32.com"
+home-page = "https://github.com/earonesty/python-smx"
+classifiers = ["License :: OSI Approved :: MIT License"]
+
