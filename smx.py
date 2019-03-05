@@ -35,15 +35,9 @@ class Smx:
 
         self.use_env = False
 
-        self.funcs = {}
-
         for name, func in self.__class__.__dict__.items():
             if hasattr(func, "is_macro"):
-
-                self.funcs[name] = func
-
                 f = (lambda func, self: lambda *args: func(self, *args))(func, self)
-
                 self.__globals[name] = f
 
     @macro
@@ -100,6 +94,10 @@ class Smx:
             return str(float(a)-float(b))
 
     @macro
+    def module(self, name):
+        self.__globals[name] = eval(name)
+
+    @macro
     def expand(self, dat):
         fi = io.StringIO(six.u(dat))
         fo = io.StringIO()
@@ -152,7 +150,7 @@ class Smx:
                     continue
 
                 name = ""
-                while (c.isalnum()):
+                while (c.isalnum() or c == "."):
                     name += c
                     c = fi.read(1)
                 
@@ -184,7 +182,7 @@ class Smx:
                 fo.write(six.u(os.environ[name]))
                 return
 
-        f = self.funcs.get(name)
+        f = eval(name, self.__globals, self.__locals)
 
         if f is None:
             raise NameError("name '%s' is not defined" % (name))
@@ -197,7 +195,7 @@ class Smx:
             self.__func_lno = lno
             self.__func_off = off
 
-            res = f(self, *args)
+            res = f(*args)
 
             if res is not None:
                 fo.write(six.u(res))
@@ -242,7 +240,7 @@ class Smx:
         raise e
 
 
-if __name__ == "__main__":
+def main():
     import argparse
 
     parser = argparse.ArgumentParser(description='Simple macro expansion')
@@ -279,6 +277,8 @@ if __name__ == "__main__":
         except Exception as e:
             log.error(e)
 
+if __name__ == "__main__":
+    main()
 
 def test_simple():
     ctx = Smx()
@@ -322,6 +322,11 @@ indented
 """
 
     assert res == expected
+
+def test_module():
+    ctx = Smx()
+    ret = ctx.expand("%os.path.basename(/foo/bar)")
+    assert ret == "bar"
 
 def test_err():
     ctx = Smx()

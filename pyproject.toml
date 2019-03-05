@@ -9,3 +9,5 @@ author-email = "erik@q32.com"
 home-page = "https://github.com/earonesty/python-smx"
 classifiers = ["License :: OSI Approved :: MIT License"]
 
+[tool.flit.scripts]
+smx = "smx:main"
