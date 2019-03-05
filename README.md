@@ -15,16 +15,24 @@ Allows simple macros to be expanded inline.  You can `from smx import Smx` to ev
 
 ### Install
     pip install smx
-    
-#### Goals 
 
- - The syntax should be "macroy" not "pythony" ... that way you can tell, at a glance when there's macros going on... vs python going on.
- - Easy to add your own macros by deriving from Smx and adding new functions with the @smx.macro decorator.
- - Easy to import python modules and use them in basically any string context
- - JSON and YAML template friendly
- - Use "as is" in most configuration contexts
- - Unsafe by default, but trivial to use "Safe mode" allowing untrusted execution of a strict set of macro expansions
- 
+### Use
+
+```
+   > smx file.in > file.out
+   > smx --help
+```
+
+Or from python:
+
+```
+   from smx import Smx
+   ctx = Smx()
+   ctx.expand("%add(1,1)")
+   ctx.expand_io(fin, fout)
+   ctx.expand_file(filename, in_place=True)
+```
+
 ### Including code and files
 
 | Macro | Description |
@@ -50,5 +58,12 @@ Allows simple macros to be expanded inline.  You can `from smx import Smx` to ev
 | add(a, b) | numbers are added | 
 | sub(a, b) | numbers are subtracted | 
 
+### Goals 
 
-
+ - The syntax should be "macroy" not "pythony" ... that way you can tell, at a glance when there's macros going on... vs python going on.
+ - Easy to add your own macros by deriving from Smx and adding new functions with the @smx.macro decorator.
+ - Easy to import python modules and use them in basically any string context
+ - JSON and YAML template friendly
+ - Use "as is" in most configuration contexts
+ - Unsafe by default, but trivial to use "Safe mode" allowing untrusted execution of a strict set of macro expansions
+ 
