@@ -16,7 +16,7 @@ Allows simple macros to be expanded inline.
 ### Including code and files ===
 
 | Macro | Description |
-| :---:   | :- |
+| :---   | :- |
 | indent(str) | each line of the indented string is indented at the level where the indent function was called. | 
 | include(str) | include the specified file | 
 | expand(str) | string is expanded using smx syntax | 
@@ -26,14 +26,14 @@ Allows simple macros to be expanded inline.
 ### Modules
 
 | Macro | Description |
-| :---:   | :- |
+| :---   | :- |
 | os.... | os functions are included by default | 
 | sys.... | sys functions are included by default | 
 
 ### Misc
 
 | Macro | Description |
-| :---:   | :- |
+| :---   | :- |
 | add(a, b) | numbers are added | 
 | sub(a, b) | numbers are subtracted | 
 
