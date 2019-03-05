@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/earonesty/python-smx.svg?branch=master)](https://travis-ci.com/earonesty/python-smx)
+
 ### Simple python macro expansion
 
     example:
@@ -11,7 +13,7 @@
     output(mod.process(f))
      ")
 
-Allows simple macros to be expanded inline.  You can `from smx import Smx` to evaluate, or evaluate from the command line.   Options to import all env vars, or modules from the command line are available.
+Allows simple macros to be expanded inline.  You can `from smx import Smx` to evaluate, or evaluate from the command line.   Options to import all env vars, or modules from the command line are available.  Macros can be nested... so `%expand(%include(...))` is a valid syntax.
 
 ### Install
     pip install smx
@@ -48,7 +50,7 @@ Or from python:
 
 | Macro | Description |
 | :---   | :- |
-| os.... | os functions are included by default | 
+| os.... | os functions are included by default, for example `os.path.basename(...)` | 
 | sys.... | sys functions are included by default | 
 
 ### Misc
