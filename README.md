@@ -1,9 +1,9 @@
 ### Simple python macro expansion
 
     example:
-      - key : value
+      - key : %os.environ.get(USER)
       %indent(%include(file_name))
-      - other : %iadd(%FROM_ENV%, 1)
+      - other : %iadd(1, 1)
       %indent(%python("
     import mod
     f = open('myfile.in')
@@ -11,7 +11,7 @@
     output(mod.process(f))
      ")
 
-Allows simple macros to be expanded inline.  You can `from smx import Smx` to evaluate, or evaluate from the command line.   
+Allows simple macros to be expanded inline.  You can `from smx import Smx` to evaluate, or evaluate from the command line.   Options to import all env vars, or modules from the command line are available.
 
 ### Install
     pip install smx
