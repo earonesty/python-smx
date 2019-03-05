@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/earonesty/smx.svg?branch=master)](https://travis-ci.com/earonesty/smx)
+[![Build Status](https://travis-ci.com/earonesty/python-smx.svg?branch=master)](https://travis-ci.com/earonesty/python-smx)
 
 ### Simple python macro expansion
 
