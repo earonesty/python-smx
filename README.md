@@ -1,4 +1,4 @@
-=== Simple python macro expansion ===
+### Simple python macro expansion
 
     example:
       - key : value
@@ -13,8 +13,29 @@
 
 Allows simple macros to be expanded inline.  
 
-=== Macros ===
+### Including code and files ===
 
 | Macro | Description |
 | :---:   | :-: |
 | indent(str) | each line of the indented string is indented at the level where the indent function was called. | 
+| include(str) | include the specified file | 
+| expand(str) | string is expanded using smx syntax | 
+| python(str) | string is expanded using python syntax | 
+| module(str) | string is interpreted as a module and imported | 
+
+### Modules
+
+| Macro | Description |
+| :---:   | :-: |
+| os.... | os functions are included by default | 
+| sys.... | sys functions are included by default | 
+
+### Misc
+
+| Macro | Description |
+| :---:   | :-: |
+| add(a, b) | numbers are added | 
+| sub(a, b) | numbers are subtracted | 
+
+
+
