@@ -1,4 +1,4 @@
-Simple python macro expansion
+=== Simple python macro expansion ===
 
     example:
       - key : value
@@ -10,3 +10,11 @@ Simple python macro expansion
     f.read()
     output(mod.process(f))
      ")
+
+Allows simple macros to be expanded inline.  
+
+=== Macros ===
+
+indent(str) - each line of the indented string is indented at the level where the indent function was called.
+include(str) - include  afile
+
