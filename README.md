@@ -15,6 +15,6 @@ Allows simple macros to be expanded inline.
 
 === Macros ===
 
-indent(str) - each line of the indented string is indented at the level where the indent function was called.
-include(str) - include  afile
-
+| Macro | Description |
+| :---:   | :-: |
+| indent(str) | each line of the indented string is indented at the level where the indent function was called. | 
