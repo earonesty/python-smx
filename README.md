@@ -8,5 +8,5 @@ Simple python macro expansion
     import mod
     f = open('myfile.in')
     f.read()
-    return(mod.process(f))
+    output(mod.process(f))
      ")
