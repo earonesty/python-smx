@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/earonesty/smx.svg?branch=master)](https://travis-ci.com/earonesty/smx)
+
 ### Simple python macro expansion
 
     example:
