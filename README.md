@@ -13,7 +13,7 @@
 
 Allows simple macros to be expanded inline.  
 
-### Including code and files ===
+### Including code and files
 
 | Macro | Description |
 | :---   | :- |
