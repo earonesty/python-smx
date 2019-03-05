@@ -13,6 +13,9 @@
 
 Allows simple macros to be expanded inline.  You can `from smx import Smx` to evaluate, or evaluate from the command line.   
 
+### Install
+    pip install smx
+    
 #### Goals 
 
  - The syntax should be "macroy" not "pythony" ... that way you can tell, at a glance when there's macros going on... vs python going on.
