@@ -255,7 +255,7 @@ class Smx:
             f = None
 
         if f is None:
-            raise NameError("name '%s' is not defined" % (name))
+            self._error(NameError("name '%s' is not defined" % (name)), lno=lno)
 
         log.debug("exec %s %s", name, args)
 
@@ -347,6 +347,8 @@ class Smx:
             lno = self.__fi_lno
         err = "file %s, line %s: %s(%s)" % (self.__fi_name, lno, e.__class__.__name__, str(e))
         log.error(err)
+        e.line_number = lno
+        e.file_name = self.__fi_name
         raise e
 
 
@@ -492,6 +494,15 @@ def test_module():
     ctx = Smx()
     res = ctx.expand("%module(platform)%platform.system%")
     assert res
+
+def test_error_lineno():
+    ctx = Smx()
+    try:
+        res = ctx.expand("1\n2%sys.platform%\n3\n4\n5%xxfooxx%")
+        assert False
+    except NameError as e:
+        assert e.line_number == 5
+        assert "xxfooxx" in str(e)
 
 def test_file():
     with NamedTemporaryFile(delete=False) as f:
