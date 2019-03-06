@@ -97,7 +97,7 @@ class Smx:
         ret = ""
         for x in eval(loop):
             self.__locals[name]=lambda: x
-            ret += self.expand(do)
+            ret += self.expand(str(do))
         return ret
 
     @macro
