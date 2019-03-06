@@ -15,6 +15,8 @@
 
 Allows simple macros to be expanded inline.  You can `from smx import Smx` to evaluate, or evaluate from the command line.   Options to import all env vars, or modules from the command line are available.  Macros can be nested... so `%expand(%include(...))` is a valid syntax.
 
+Used for yml templates, config files, kubernates deployments, simple HTML pages, etc.
+
 ### Install
     pip install smx
 
@@ -57,6 +59,8 @@ Or from python:
 
 | Macro | Description |
 | :---   | :- |
+| for(name, range, loop) | loop code is expanded for each value in the range | 
+| if(val, true-val, false-val) | if val is expanded to non-empty, true-val is executed | 
 | add(a, b) | numbers are added | 
 | sub(a, b) | numbers are subtracted | 
 
@@ -68,4 +72,9 @@ Or from python:
  - JSON and YAML template friendly
  - Use "as is" in most configuration contexts
  - Unsafe by default, but trivial to use "Safe mode" allowing untrusted execution of a strict set of macro expansions
- 
+
+### Caveats
+
+Important to remember that all macros result in "strings", so when dealing with macros.
+
+

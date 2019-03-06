@@ -116,6 +116,14 @@ class Smx:
         return ret
 
     @macro
+    def set(self, key, val):
+        self.__locals[key] = val
+
+    @macro
+    def get(self, key):
+        return self.__locals.get("key","")
+
+    @macro
     def add(self, a, b):
         try:
             return str(int(a)+int(b))
@@ -257,7 +265,10 @@ class Smx:
             self.__func_lno = lno
             self.__func_off = off
 
-            res = f(*args)
+            if not args and not callable(f):
+                res = str(f)
+            else:
+                res = f(*args)
 
             if res is not None:
                 fo.write(six.u(str(res)))
@@ -442,6 +453,29 @@ def test_for():
     ctx = Smx()
     res = ctx.expand("%for(x,range(9),%x%)")
     assert res == "012345678"
+
+def test_define():
+    ctx = Smx()
+    
+    ctx.expand("""
+    %python(
+        def factorial(val):
+            import math
+            return(math.factorial(int(val)))
+        )
+    """)
+    
+    res = ctx.expand("%factorial(3)")
+    assert res == "6"
+
+def test_set_get():
+    ctx = Smx()
+    ctx.expand("%python(x = 4)")
+    res = ctx.expand("%x%")
+    assert res == "4"
+    ctx.expand("%set(x,5)")
+    res = ctx.expand("%x%")
+    assert res == "5"
 
 def test_if():
     ctx = Smx()
