@@ -92,6 +92,21 @@ class Smx:
 
         return str(res.rstrip())
 
+    def truthy(self, string):
+        # user can override this definition, if desired
+        if not string:
+            return False
+        return True
+
+    @macro(name="if",quote=[2,3])
+    def _if(self, cond, do1, do2):
+        ret = ""
+        if self.truthy(cond):
+            ret += self.expand(str(do1))
+        else:
+            ret += self.expand(str(do2))
+        return ret
+
     @macro(name="for",quote=[3])
     def _for(self, name, loop, do):
         ret = ""
@@ -149,6 +164,7 @@ class Smx:
     def expand_io(self, fi, fo, term=[], in_c=None):
         c = in_c or fi.read(1)
         par = 0
+        tmp = u''
         while c != '':
             if c == '\n':
                 self.__fi_lno += 1
@@ -164,8 +180,15 @@ class Smx:
             if c == ')':
                 par -= 1
 
+            if c == ' ':
+                tmp += c
+            else:
+                fo.write(tmp)
+                tmp = u''
+
             if c != '%':
-                fo.write(c)
+                if c != ' ':
+                    fo.write(c)
                 c = fi.read(1)
                 continue
            
@@ -277,8 +300,11 @@ class Smx:
 
         fo = io.StringIO()
        
-        if c in (',', ')'):
+        if c in (')'):
             return None, c
+
+        if c in (','):
+            return "", c
 
         if no_expand:
             if c == '"':
@@ -378,6 +404,8 @@ def test_spaces():
     ctx = Smx()
     assert ctx.expand("%add( 1 ,\n%add( 2 , 3 ))") == "6"
 
+    assert ctx.expand("%expand(  1  )") == "1"
+
 def test_indent():
     ctx = Smx()
     res = ctx.expand("""
@@ -394,6 +422,7 @@ indented
     indented
 """
 
+    log.debug("%s %s", res, expected)
     assert res == expected
 
 def test_module():
@@ -413,4 +442,15 @@ def test_for():
     ctx = Smx()
     res = ctx.expand("%for(x,range(9),%x%)")
     assert res == "012345678"
+
+def test_if():
+    ctx = Smx()
+    res = ctx.expand("%if(,T,F)")
+    assert res == "F"
+    res = ctx.expand("%if(0,T,F)")
+    assert res == "T"
+    res = ctx.expand("%if(false,T,F)")
+    assert res == "T"
+    res = ctx.expand("%if(blah,T,F)")
+    assert res == "T"
 
