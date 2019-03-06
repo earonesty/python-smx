@@ -9,7 +9,7 @@ author-email = "erik@q32.com"
 home-page = "https://github.com/earonesty/python-smx"
 description-file="README.md"
 classifiers=["Intended Audience :: Developers",
-    "License :: OSI Approved ::MIT License",
+    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
