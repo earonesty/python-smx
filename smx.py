@@ -12,12 +12,24 @@ import logging
 
 log = logging.getLogger(__name__)
 
-def macro(func):
-    def wrap(*arg, **kw):
-        return func(*arg, **kw)
-    wrap.is_macro = True
-    wrap.__name__ = func.__name__
-    return wrap
+def macro(*args, **kws):
+    if not kws:
+        func = args[0]
+        def wrap(*arg, **kw):
+            return func(*arg, **kw)
+        wrap.is_macro = True
+        wrap.quoted = False
+        wrap.__name__ = args[0].__name__
+        return wrap
+    else:
+        def outer(func):
+            def wrap(*arg, **kw):
+                return func(*arg, **kw)
+            wrap.is_macro = True
+            wrap.quoted = kws.get("quote")
+            wrap.__name__ = kws.get("name") or func.__name__
+            return wrap
+        return outer
 
 class Smx:
     funcs = {}
@@ -38,7 +50,8 @@ class Smx:
         for name, func in self.__class__.__dict__.items():
             if hasattr(func, "is_macro"):
                 f = (lambda func, self: lambda *args: func(self, *args))(func, self)
-                self.__globals[name] = f
+                f.quoted = func.quoted
+                self.__globals[func.__name__] = f
 
     @macro
     def python(self, data):
@@ -78,6 +91,14 @@ class Smx:
             first = False
 
         return str(res.rstrip())
+
+    @macro(name="for",quote=[3])
+    def _for(self, name, loop, do):
+        ret = ""
+        for x in eval(loop):
+            self.__locals[name]=lambda: x
+            ret += self.expand(do)
+        return ret
 
     @macro
     def add(self, a, b):
@@ -127,15 +148,21 @@ class Smx:
 
     def expand_io(self, fi, fo, term=[], in_c=None):
         c = in_c or fi.read(1)
+        par = 0
         while c != '':
             if c == '\n':
                 self.__fi_lno += 1
                 self.__fi_off = 0
             elif c == ' ':
                 self.__fi_off += 1
+            elif c == '(':
+                par += 1
 
-            if c in term:
+            if c in term and not par:
                 return c
+
+            if c == ')':
+                par -= 1
 
             if c != '%':
                 fo.write(c)
@@ -153,8 +180,11 @@ class Smx:
                 while (c.isalnum() or c == "."):
                     name += c
                     c = fi.read(1)
-                
+               
                 args = []
+
+                f = self.__locals.get(name) or self.__globals.get(name)
+                quoted = f and getattr(f, "quoted", None)
 
                 lno = self.__fi_lno
                 off = self.__fi_off
@@ -162,13 +192,15 @@ class Smx:
                     self._exec(name, args, fi, fo, lno, off)
                 elif c == '(':
                     anum = 1
-                    arg, tc = self._exparg(name, anum, fi)
+                    noexp = quoted and anum in quoted
+                    arg, tc = self._exparg(name, anum, fi, no_expand=noexp)
                     while arg is not None:
                         args.append(arg)
                         if tc != ',':
                             break
                         anum += 1
-                        arg, tc = self._exparg(name, anum, fi)
+                        noexp = quoted and anum in quoted
+                        arg, tc = self._exparg(name, anum, fi, no_expand=noexp)
 
                     self._exec(name, args, fi, fo, lno, off)
                 else:
@@ -182,7 +214,14 @@ class Smx:
                 fo.write(six.u(os.environ[name]))
                 return
 
-        f = eval(name, self.__globals, self.__locals)
+        if name in self.__locals:
+            f = self.__locals[name]
+        elif name in self.__globals:
+            f = self.__globals[name]
+        elif "." in name:
+            f = eval(name, self.__globals, self.__locals)
+        else: 
+            f = None
 
         if f is None:
             raise NameError("name '%s' is not defined" % (name))
@@ -198,14 +237,39 @@ class Smx:
             res = f(*args)
 
             if res is not None:
-                fo.write(six.u(res))
+                fo.write(six.u(str(res)))
             else:
                 log.debug("file %s, line %s, function %s returned None", self.__fi_name, lno, name)
         except Exception as e:
             log.exception("exception in file %s, line %s, function %s", self.__fi_name, lno, name)
             self._error(e, lno=lno)
 
-    def _exparg(self, fname, argnum, fi):
+    def scan_io(self, fi, fo, term, in_c = None):
+        c = in_c or fi.read(1)
+        res = u""
+        par = 0
+        while c != '':
+            # todo, properly generate a parse tree
+            if c == '\n':
+                self.__fi_lno += 1
+                self.__fi_off = 0
+            elif c == ' ':
+                self.__fi_off += 1
+            elif c == '(':
+                par += 1
+
+            if par:
+                if c in ')':
+                    par -= 1
+
+            if c in term:
+                break
+
+            res += c
+            c = fi.read(1)
+        return c, res
+
+    def _exparg(self, fname, argnum, fi, no_expand=False):
         c = fi.read(1)
 
         while c.isspace():
@@ -216,10 +280,16 @@ class Smx:
         if c in (',', ')'):
             return None, c
 
-        if c == '"':
-            term_char = self.expand_io(fi, fo, term=['"'])
+        if no_expand:
+            if c == '"':
+                term_char, res = self.scan_io(fi, fo, term=['"'])
+            else:
+                term_char, res = self.scan_io(fi, fo, term=[',',')'], in_c=c)
         else:
-            term_char = self.expand_io(fi, fo, term=[',',')'], in_c=c)
+            if c == '"':
+                term_char = self.expand_io(fi, fo, term=['"'])
+            else:
+                term_char = self.expand_io(fi, fo, term=[',',')'], in_c=c)
 
         if term_char == '"':
             c = fi.read(1)
@@ -229,6 +299,9 @@ class Smx:
 
         if term_char not in [',', ')']:
             self._error(SyntaxError("parsing argument %s in '%s'" % (argnum, fname)))
+
+        if no_expand:
+            return res, term_char
 
         return str(fo.getvalue()), term_char
 
@@ -258,7 +331,7 @@ def main():
     if args.debug:
         level = logging.DEBUG
 
-    logging.basicConfig(format='%(asctime)-15s %(levelname)s %(message)s', level=level)
+    logging.basicConfig(format='%(asctime)s %(lineno)d %(levelname)s %(message)s', level=level)
 
     ctx = Smx()
 
@@ -275,7 +348,7 @@ def main():
         try:
             ctx.expand_file(f, in_place=args.inplace)
         except Exception as e:
-            log.error(e)
+            log.exception(e)
 
 if __name__ == "__main__":
     main()
@@ -335,4 +408,9 @@ def test_err():
         assert False
     except TypeError:
         pass
+
+def test_for():
+    ctx = Smx()
+    res = ctx.expand("%for(x,range(9),%x%)")
+    assert res == "012345678"
 
