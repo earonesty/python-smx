@@ -2,7 +2,7 @@
 
 """Simple python macro expansion"""
 
-__version__ = "0.8.5"
+__version__ = "0.9.0"
 
 import os, sys, io
 import six
@@ -92,16 +92,10 @@ class Smx:
 
         return str(res.rstrip())
 
-    def truthy(self, string):
-        # user can override this definition, if desired
-        if not string:
-            return False
-        return True
-
     @macro(name="if",quote=[2,3])
     def _if(self, cond, do1, do2):
         ret = ""
-        if self.truthy(cond):
+        if cond and eval(cond):
             ret += self.expand(str(do1))
         else:
             ret += self.expand(str(do2))
@@ -483,12 +477,12 @@ def test_if():
     ctx = Smx()
     res = ctx.expand("%if(,T,F)")
     assert res == "F"
-    res = ctx.expand("%if(0,T,F)")
+    res = ctx.expand("%if(False,T,F)")
+    assert res == "F"
+    res = ctx.expand("%if(True,T,F)")
     assert res == "T"
-    res = ctx.expand("%if(false,T,F)")
-    assert res == "T"
-    res = ctx.expand("%if(blah,T,F)")
-    assert res == "T"
+    res = ctx.expand("%if(sys.platform=='nada',T,F)")
+    assert res == "F"
 
 def test_module():
     ctx = Smx()
