@@ -5,10 +5,10 @@
 __version__ = "0.8.3"
 
 import os, sys, io
-
 import six
-
 import logging
+
+from tempfile import NamedTemporaryFile
 
 log = logging.getLogger(__name__)
 
@@ -148,7 +148,7 @@ class Smx:
         self.__fi_lno = 1
         
         if in_place:
-            fo = NamedTemporaryFile(prefix=f, dir=os.path.dirname(f) or ".", delete=False)
+            fo = NamedTemporaryFile(prefix=file_name, dir=os.path.dirname(file_name) or ".", delete=False, mode="w")
         elif output_stream:
             fo = output_stream
         else:
@@ -159,7 +159,7 @@ class Smx:
 
         if in_place:
             fo.close()
-            os.rename(fo.name, f) 
+            os.rename(fo.name, file_name) 
 
     def expand_io(self, fi, fo, term=[], in_c=None):
         c = in_c or fi.read(1)
@@ -454,3 +454,19 @@ def test_if():
     res = ctx.expand("%if(blah,T,F)")
     assert res == "T"
 
+def test_file():
+    with NamedTemporaryFile(delete=False) as f:
+        f.write(six.b("%for(i,range(3),%i%)"))
+
+    # to stream
+    out = io.StringIO()
+    Smx().expand_file(f.name, out)
+    print(out.getvalue())
+    assert str(out.getvalue()) == "012"
+
+    # inplace
+    Smx().expand_file(f.name, in_place=True)
+    res = str(open(f.name).read())
+    assert res == "012"
+
+    os.unlink(f.name)
