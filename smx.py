@@ -139,7 +139,7 @@ class Smx:
 
     @macro
     def module(self, name):
-        self.__globals[name] = eval(name)
+        self.__globals[name] = new_module = __import__(name)
 
     @macro
     def expand(self, dat):
@@ -487,6 +487,11 @@ def test_if():
     assert res == "T"
     res = ctx.expand("%if(blah,T,F)")
     assert res == "T"
+
+def test_module():
+    ctx = Smx()
+    res = ctx.expand("%module(platform)%platform.system%")
+    assert res
 
 def test_file():
     with NamedTemporaryFile(delete=False) as f:
