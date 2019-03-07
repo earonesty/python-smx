@@ -6,7 +6,7 @@
       - key : %os.environ.get(USER)
       - roaming : %if(sys.platform=='win32',1,0)
       %indent(%include(file_name))
-      - other : %iadd(1, 1)
+      - other : %eval(1 + 1)
       %indent(%python("
     import mod
     f = open('myfile.in')
