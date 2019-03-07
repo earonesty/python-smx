@@ -52,8 +52,8 @@ Or from python:
 
 | Macro | Description |
 | :---   | :- |
-| os.... | os functions are included by default, for example `os.path.basename(...)` | 
-| sys.... | sys functions are included by default | 
+| os.... | os functions are included by default, for example `%os.path.basename(...)` | 
+| sys.... | sys functions are included by default EG: `%sys.platform%` can be used| 
 
 ### Misc
 
