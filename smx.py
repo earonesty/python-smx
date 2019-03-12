@@ -34,7 +34,7 @@ def macro(*args, **kws):
 class Smx:
     funcs = {}
 
-    def __init__(self):
+    def __init__(self, use_env=False):
 
         self.__fi_lno = 1
         self.__fi_off = 0
@@ -44,14 +44,16 @@ class Smx:
                 "os" : os,
                 "sys" : sys,
         }
-
-        self.use_env = False
+        self.__stack = []
+        self.use_env = use_env
 
         for name, func in self.__class__.__dict__.items():
             if hasattr(func, "is_macro"):
                 f = (lambda func, self: lambda *args: func(self, *args))(func, self)
                 f.quoted = func.quoted
                 self.__globals[func.__name__] = f
+                if func.__name__ in ["expand","module"]:
+                    globals()[func.__name__] = f
 
     @macro
     def python(self, data):
@@ -92,6 +94,10 @@ class Smx:
 
         return str(res.rstrip())
 
+    @macro
+    def eval(self, code):
+        return eval(code, self.__globals, self.__locals)
+
     @macro(name="if",quote=[2,3])
     def _if(self, cond, do1, do2):
         ret = ""
@@ -104,10 +110,38 @@ class Smx:
     @macro(name="for",quote=[3])
     def _for(self, name, loop, do):
         ret = ""
+        locs = {}
+        self.push_locs(locs)
         for x in eval(loop):
-            self.__locals[name]=lambda: x
-            ret += self.expand(str(do))
+            locs[name]=x
+            ret += self.expand(str(do)))
         return ret
+
+    @macro(quote=[2])
+    def define(self, name, body, *args):
+        j_names = ','.join(args)
+        defs = ""
+        for arg in args:
+            defs += f"    self._Smx__locals['{arg}']={arg}\n"
+        code = f"""
+def _tmp(self, {j_names}):
+    self.push_local({})
+{defs}
+    self.__res = self.expand('''{body}''')
+    self.pop_local()
+    return self.__res
+"""
+        locs = {}
+        exec(code, globals(), locs)
+        self.__globals[name]=lambda *args: locs["_tmp"](self, *args)
+
+    def pop_local(self):
+        if self.__stack:
+            self.__locals = self.__stack.pop()
+
+    def push_local(self, x):
+        self.__stack.append(x)
+        self.__locals = x 
 
     @macro
     def set(self, key, val):
@@ -115,7 +149,7 @@ class Smx:
 
     @macro
     def get(self, key):
-        return self.__locals.get("key","")
+        return self.__locals.get(key,self.__globals.get(key,""))
 
     @macro
     def add(self, a, b):
@@ -139,6 +173,7 @@ class Smx:
     def expand(self, dat):
         fi = io.StringIO(six.u(dat))
         fo = io.StringIO()
+        log.debug("expand '%s", dat)
         self.expand_io(fi, fo)
         return str(fo.getvalue())
 
@@ -289,8 +324,7 @@ class Smx:
             if par:
                 if c in ')':
                     par -= 1
-
-            if c in term:
+            elif c in term:
                 break
 
             res += c
@@ -304,7 +338,11 @@ class Smx:
             c = fi.read(1)
 
         fo = io.StringIO()
-       
+      
+        if c == "'":
+            no_expand = True
+            c = fi.read(1)
+
         if c in (')'):
             return None, c
 
@@ -346,19 +384,20 @@ class Smx:
         raise e
 
 
-def main():
+def main(test_argv=None):
     import argparse
 
     parser = argparse.ArgumentParser(description='Simple macro expansion')
 
     parser.add_argument('-d', '--debug', action='store_true', help='turn on debug logging')
+    parser.add_argument('-c', '--command', help='run a single statement')
     parser.add_argument('-i', '--inplace', action='store_true', help='modify files in-place')
     parser.add_argument('-e', '--env', action='store_true', help='export env vars as macro names')
     parser.add_argument('-r', '--restrict', action='append', help='restrict macros to explicit list')
     parser.add_argument('-m', '--module', action='append', help='import python module', default=[])
-    parser.add_argument("inp", nargs="+", help='list of files', default=[])
+    parser.add_argument("inp", nargs="*", help='list of files', default=[])
 
-    args = parser.parse_args()
+    args = parser.parse_args(test_argv)
 
     level = logging.ERROR
     if args.debug:
@@ -376,6 +415,9 @@ def main():
 
     if args.env:
         ctx.use_env = True
+
+    if args.command:
+        print(ctx.expand(args.command))
 
     for f in args.inp:
         try:
@@ -437,6 +479,11 @@ def test_module():
     ret = ctx.expand("%os.path.basename(/foo/bar)")
     assert ret == "bar"
 
+def test_eval():
+    ctx = Smx()
+    ret = ctx.expand("%eval(2 ** 32)")
+    assert ret == "4294967296"
+
 def test_err():
     ctx = Smx()
     try:
@@ -464,6 +511,21 @@ def test_define():
     res = ctx.expand("%factorial(3)")
     assert res == "6"
 
+def test_defmacro():
+    ctx = Smx()
+    
+    ctx.expand("""
+    %define(factorial,%strip(
+            %module(math)
+            %eval('math.factorial(int(val)))
+        ),val)
+    """)
+    
+    res = ctx.expand("%factorial(3)")
+    print("res == ", res)
+    assert res == "6"
+
+
 def test_set_get():
     ctx = Smx()
     ctx.expand("%python(x = 4)")
@@ -472,6 +534,11 @@ def test_set_get():
     ctx.expand("%set(x,5)")
     res = ctx.expand("%x%")
     assert res == "5"
+    res = ctx.expand("%get(x)")
+    print("res == 5 ? ", res)
+    assert res == "5"
+    res = ctx.expand("%get(nada)")
+    assert res == ""
 
 def test_if():
     ctx = Smx()
@@ -481,7 +548,7 @@ def test_if():
     assert res == "F"
     res = ctx.expand("%if(True,T,F)")
     assert res == "T"
-    res = ctx.expand("%if(sys.platform=='nada',T,F)")
+    res = ctx.expand("%if(sys.platform == 'nada',T,F)")
     assert res == "F"
 
 def test_module():
