@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.com/earonesty/python-smx.svg?branch=master)](https://travis-ci.com/earonesty/python-smx)
 
-### Simple python macro expansion
+### Simple python templates
 
     example:
       - key : %os.environ.get(USER)
