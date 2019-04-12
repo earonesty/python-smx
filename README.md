@@ -76,6 +76,5 @@ Or from python:
 
 ### Caveats
 
-Important to remember that all macros result in "strings", so when dealing with macros.
-
-
+ - Important to remember that all macros result in "strings", not other python types.
+ - When context-oriented template programming gets complex, you probably shouldn't be using templates.
