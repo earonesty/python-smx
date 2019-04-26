@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.com/earonesty/python-smx.svg?branch=master)](https://travis-ci.com/earonesty/python-smx)
+[![Coverage](https://codecov.io/gh/earonesty/python-smx.svg/branch/master/graph/badge.svg)](https://codecov.io/earonesty/python-smx)
 
 ### Simple python templates
 

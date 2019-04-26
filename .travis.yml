@@ -6,7 +6,9 @@ python:
   - "3.6"
 # command to install dependencies
 install:
-  - pip install pytest
+  - pip install pytest pytest-cov codecov
 # command to run tests
 script:
-  - pytest smx.py
+  - pytest -v --cov=. smx.py
+after_success:
+  - codecov

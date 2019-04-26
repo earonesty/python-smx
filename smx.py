@@ -432,11 +432,6 @@ indented
     log.debug("%s %s", res, expected)
     assert res == expected
 
-def test_module():
-    ctx = Smx()
-    ret = ctx.expand("%os.path.basename(/foo/bar)")
-    assert ret == "bar"
-
 def test_err():
     ctx = Smx()
     try:
@@ -483,6 +478,18 @@ def test_if():
     assert res == "T"
     res = ctx.expand("%if(sys.platform=='nada',T,F)")
     assert res == "F"
+
+def test_escape():
+    ctx = Smx()
+    res = ctx.expand("%%")
+    assert res == "%"
+    res = ctx.expand("%%%add(1,1)")
+    assert res == "%2"
+
+def test_os():
+    ctx = Smx()
+    ret = ctx.expand("%os.path.basename(/foo/bar)")
+    assert ret == "bar"
 
 def test_module():
     ctx = Smx()
