@@ -6,7 +6,8 @@ python:
   - "3.6"
 # command to install dependencies
 install:
-  - pip install pytest pytest-cov codecov
+  # install pytest-cov first, which should pull in the right deps
+  - pip install pytest-cov codecov pytest
 # command to run tests
 script:
   - pytest -v --cov=. smx.py
