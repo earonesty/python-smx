@@ -48,7 +48,12 @@ def throw(err):
 
 
 class SmxWsgi:
-    def __init__(self, root, init=None):
+    def __init__(self, root=None, init=None):
+        if not root:
+            root = os.environ.get("SMX_ROOT")
+        if not init:
+            init = os.environ.get("SMX_INIT")
+
         self.__detect = {".html", ".htm"}
         self.__expand = {".htx", ".smx"}
 
@@ -94,6 +99,14 @@ class SmxWsgi:
                 yield x
                 x = f.read(CHUNK)
 
+    @memoize
+    def find_index(self, dir):
+        for f in ["index.smx", "index.html", "index.htm"]:
+            p = os.path.join(dir, f)
+            if os.path.exists(p):
+                return p
+        return p
+
     def __call__(self, env, start_response):
 
         try:
@@ -109,6 +122,9 @@ class SmxWsgi:
                 full_path = self.root
             else:
                 full_path = os.path.join(self.root, url.lstrip("/"))
+
+            if os.path.isdir(full_path):
+                full_path = self.find_index(full_path)
 
             if not self.is_script(full_path):
                 log.debug("STATIC %s", url)

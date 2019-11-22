@@ -66,6 +66,9 @@ Or from python:
 | add(a, b) | numbers are added | 
 | sub(a, b) | numbers are subtracted | 
 
+### Wsgi
+ Smx includes an [wsgi module](wsgi.md).   The goal is to be able to easily serve template driven pages using smx syntax.
+
 ### Goals 
 
  - The syntax should be "macroy" not "pythony" ... that way you can tell, at a glance when there's macros going on... vs python going on.
