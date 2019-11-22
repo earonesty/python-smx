@@ -57,7 +57,7 @@ class SmxWsgi:
         self.__detect = {".html", ".htm"}
         self.__expand = {".htx", ".smx"}
 
-        self.root = root
+        self.root = os.path.abspath(root)
         self.ctx = Smx()
         if init:
             fp = os.path.join(self.root, init)
