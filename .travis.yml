@@ -4,7 +4,7 @@ python:
   - "3.6"
   - "3.7"
 install:
-  - ./reqs.sh
+  - pip install -r reqs.txt
 script:
   - ./test.sh
 after_success:
