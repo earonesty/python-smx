@@ -57,14 +57,16 @@ class SmxWsgi:
         self.__detect = {".html", ".htm"}
         self.__expand = {".htx", ".smx"}
 
-        self.root = os.path.abspath(root)
+        self.root = root
         self.ctx = Smx()
-        if init:
-            fp = os.path.join(self.root, init)
-            with open(fp) as f:
-                self.ctx.expand_io(f, Writer())
+        if root:
+            self.root = os.path.abspath(root)
+            if init:
+                fp = os.path.join(self.root, init)
+                with open(fp) as f:
+                    self.ctx.expand_io(f, Writer())
 
-        self._init  = False
+        self._init = False
 
     @memoize
     def is_script(self, path):
