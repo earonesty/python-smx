@@ -34,8 +34,9 @@ def macro(*args, **kws):
 class Smx:
     funcs = {}
 
-    def __init__(self, use_env=False):
+    def __init__(self, init={}, environ={}):
 
+        self.environ = environ
         self.__fi_lno = 1
         self.__fi_off = 0
         self.__fi_name = "<inline>"
@@ -45,7 +46,9 @@ class Smx:
                 "sys" : sys,
         }
         self.__stack = []
-        self.use_env = use_env
+        if isinstnace(init, Smx):
+            init = init.__locals
+        self.__locals.update(init)
 
         for name, func in self.__class__.__dict__.items():
             if hasattr(func, "is_macro"):
@@ -114,7 +117,7 @@ class Smx:
         self.push_locs(locs)
         for x in eval(loop):
             locs[name]=x
-            ret += self.expand(str(do)))
+            ret += self.expand(str(do))
         return ret
 
     @macro(quote=[2])
@@ -183,7 +186,7 @@ def _tmp(self, {j_names}):
 
         self.__fi_name = file_name
         self.__fi_lno = 1
-        
+
         if in_place:
             fo = NamedTemporaryFile(prefix=file_name, dir=os.path.dirname(file_name) or ".", delete=False, mode="w")
         elif output_stream:
@@ -228,7 +231,7 @@ def _tmp(self, {j_names}):
                     fo.write(c)
                 c = fi.read(1)
                 continue
-           
+
             if (c=='%'):
                 c = fi.read(1)
                 if (c == '%'):
@@ -240,7 +243,7 @@ def _tmp(self, {j_names}):
                 while (c.isalnum() or c == "."):
                     name += c
                     c = fi.read(1)
-               
+
                 args = []
 
                 f = self.__locals.get(name) or self.__globals.get(name)
@@ -269,9 +272,9 @@ def _tmp(self, {j_names}):
             c = fi.read(1)
 
     def _exec(self, name, args, fi, fo, lno, off):
-        if self.use_env and not args:
-            if name in os.environ:
-                fo.write(six.u(os.environ[name]))
+        if not args:
+            if name in self.environ:
+                fo.write(six.u(self.environ[name]))
                 return
 
         if name in self.__locals:
@@ -280,7 +283,7 @@ def _tmp(self, {j_names}):
             f = self.__globals[name]
         elif "." in name:
             f = eval(name, self.__globals, self.__locals)
-        else: 
+        else:
             f = None
 
         if f is None:
@@ -294,7 +297,13 @@ def _tmp(self, {j_names}):
             self.__func_lno = lno
             self.__func_off = off
 
-            if not args and not callable(f):
+            if isinstance(f, dict):
+                if len(args) == 1:
+                    res = f[args[0]]
+                else:
+                    f[args[0]] = args[1]
+                    res = None
+            elif not args and not callable(f):
                 res = str(f)
             else:
                 res = f(*args)
@@ -414,7 +423,7 @@ def main(test_argv=None):
         ctx.restrict(args.restrict)
 
     if args.env:
-        ctx.use_env = True
+        ctx.environ = os.environ
 
     if args.command:
         print(ctx.expand(args.command))
