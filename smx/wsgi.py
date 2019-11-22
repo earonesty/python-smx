@@ -83,10 +83,9 @@ class SmxWsgi:
         if content_length is not None:
             headers.append(('Content-Length', str(content_length)))
 
-        start_response('200 OK', headers)
-
         with open(path, 'rb') as f:
             x = f.read(CHUNK)
+            start_response('200 OK', headers)
             while x:
                 log.debug("YIELD")
                 yield x

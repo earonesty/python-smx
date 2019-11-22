@@ -3,7 +3,7 @@
 Simplest way to use the SmxWsgi module:
 
 ```
-SMX_INIT=/path/to/my/config.file SMX_ROOT=/path/to/my/html/ gunicorn -w 4 smx:SmxWsgi
+SMX_INIT=/path/to/my/config.file SMX_ROOT=/path/to/my/html/ gunicorn -w 4 smx:wsgi
 ```
 
 * This will serve up files named "index.smx" as directory listings.
@@ -17,5 +17,6 @@ SMX_INIT=/path/to/my/config.file SMX_ROOT=/path/to/my/html/ gunicorn -w 4 smx:Sm
 
 All smx macros and python are otherwise available.
 
-.smx pages are always parsed
-.html pages can optionally contain embedded smx, trigger with %expand% at the top of the page. 
+* .smx pages are always parsed
+* .html pages can optionally contain embedded smx, trigger with %expand% at the top of the page. 
+
