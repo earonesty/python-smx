@@ -64,6 +64,8 @@ class SmxWsgi:
             with open(fp) as f:
                 self.ctx.expand_io(f, Writer())
 
+        self._init  = False
+
     @memoize
     def is_script(self, path):
         _, ext = os.path.splitext(path)
@@ -100,6 +102,10 @@ class SmxWsgi:
         return p
 
     def __call__(self, env, start_response):
+
+        if not self._init:
+            os.chdir(self.root)
+            self._init = True
 
         try:
             url = env.get('SCRIPT_NAME')
@@ -371,6 +377,14 @@ def test_500():
     app.create("index.smx", "%addsdfsfd%")
     res = app.req("/")
     assert res.code == 500
+
+def test_include():
+    app = app_fixture(test_env=True)
+    app.create("other", "xxx")
+    app.create("index.smx", "yyy%include(other)")
+    res = app.req("/")
+    assert res.data == b'yyyxxx'
+
 
 def test_main():
     import threading
