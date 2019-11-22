@@ -485,7 +485,7 @@ indented
     log.debug("%s %s", res, expected)
     assert res == expected
 
-def test_module():
+def test_basename():
     ctx = Smx()
     ret = ctx.expand("%os.path.basename(/foo/bar)")
     assert ret == "bar"
