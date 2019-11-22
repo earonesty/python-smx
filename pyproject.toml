@@ -14,4 +14,4 @@ classifiers=["Intended Audience :: Developers",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 [tool.flit.scripts]
-smx = "smx:main"
+smx = "smx.smx:main"

@@ -1,12 +1,10 @@
 #!/usr/bin/env python
 
-"""Simple python macro expansion"""
-
-__version__ = "0.9.0"
-
 import os, sys, io
 import six
 import logging
+
+__version__ = "0.9.3"
 
 from tempfile import NamedTemporaryFile
 
@@ -44,9 +42,10 @@ class Smx:
         self.__globals = {
                 "os" : os,
                 "sys" : sys,
+                "version" : __version__,
         }
         self.__stack = []
-        if isinstnace(init, Smx):
+        if isinstance(init, Smx):
             init = init.__locals
         self.__locals.update(init)
 
@@ -114,7 +113,7 @@ class Smx:
     def _for(self, name, loop, do):
         ret = ""
         locs = {}
-        self.push_locs(locs)
+        self.push_local(locs)
         for x in eval(loop):
             locs[name]=x
             ret += self.expand(str(do))
@@ -128,7 +127,7 @@ class Smx:
             defs += f"    self._Smx__locals['{arg}']={arg}\n"
         code = f"""
 def _tmp(self, {j_names}):
-    self.push_local({})
+    self.push_local({{}})
 {defs}
     self.__res = self.expand('''{body}''')
     self.pop_local()
@@ -313,7 +312,7 @@ def _tmp(self, {j_names}):
             else:
                 log.debug("file %s, line %s, function %s returned None", self.__fi_name, lno, name)
         except Exception as e:
-            log.exception("exception in file %s, line %s, function %s", self.__fi_name, lno, name)
+            log.debug("exception in file %s, line %s, function %s", self.__fi_name, lno, name)
             self._error(e, lno=lno)
 
     def scan_io(self, fi, fo, term, in_c = None):
@@ -398,6 +397,7 @@ def main(test_argv=None):
 
     parser = argparse.ArgumentParser(description='Simple macro expansion')
 
+    parser.add_argument('-v', '--version', action='store_true', help='show version')
     parser.add_argument('-d', '--debug', action='store_true', help='turn on debug logging')
     parser.add_argument('-c', '--command', help='run a single statement')
     parser.add_argument('-i', '--inplace', action='store_true', help='modify files in-place')
@@ -407,6 +407,9 @@ def main(test_argv=None):
     parser.add_argument("inp", nargs="*", help='list of files', default=[])
 
     args = parser.parse_args(test_argv)
+
+    if args.version:
+        print(__version__)
 
     level = logging.ERROR
     if args.debug:
@@ -506,6 +509,7 @@ def test_for():
     res = ctx.expand("%for(x,range(9),%x%)")
     assert res == "012345678"
 
+
 def test_define():
     ctx = Smx()
     
@@ -571,6 +575,11 @@ def test_os():
     ctx = Smx()
     ret = ctx.expand("%os.path.basename(/foo/bar)")
     assert ret == "bar"
+
+def test_version():
+    ctx = Smx()
+    ret = ctx.expand("%version%")
+    assert ret == str(__version__)
 
 def test_module():
     ctx = Smx()
