@@ -2,13 +2,13 @@ import os, time
 
 from io import StringIO
 
-from . import engines
+from engines import engines
 
 from tempfile import mkdtemp
 
 import logging
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 log = logging.getLogger("smx")
 log.debug("TEST")
