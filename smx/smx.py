@@ -124,18 +124,17 @@ class Smx:
         j_names = ','.join(args)
         defs = ""
         for arg in args:
-            defs += f"    self._Smx__locals['{arg}']={arg}\n"
-        code = f"""
-def _tmp(self, {j_names}):
-    self.push_local({{}})
-{defs}
-    self.__res = self.expand('''{body}''')
+            defs += "    self._Smx__locals['" + arg + "']=" + arg + "\n"
+        code = """def _tmp(self, """ + j_names + """):
+    self.push_local({})
+""" + defs + """
+    self.__res = self.expand('''""" + body + """''')
     self.pop_local()
     return self.__res
 """
         locs = {}
         exec(code, globals(), locs)
-        self.__globals[name]=lambda *args: locs["_tmp"](self, *args)
+        self.__globals[name] = lambda *args: locs["_tmp"](self, *args)
 
     def pop_local(self):
         if self.__stack:
