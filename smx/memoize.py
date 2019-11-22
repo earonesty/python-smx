@@ -2,7 +2,7 @@ import os
 import time
 import functools
 import logging
-from typing import Callable, Any, Dict
+from typing import Callable, Any, Dict, cast
 
 log = logging.getLogger(__name__)
 
@@ -30,6 +30,7 @@ class memoize():
 
         if type(self.cache) is str:
             # user specified name of a property that contains the cache dictionary
+            # use this to prevent race conditions from injection below!
             cache = getattr(obj, cast(str, self.cache))
         else:
             # inject cache into the instance, so it doesn't live beyond the scope of the instance
@@ -186,3 +187,18 @@ def test_memoize3():
     assert c.fun2.get() == m
 
 
+def test_memoize4():
+    class Cls:
+        foo = {}
+        @memoize(cache="foo")
+        def fun(self, a):
+            return (a, os.urandom(32))
+
+        @memoize(cache="foo")
+        def fun2(self):
+            return os.urandom(32)
+
+    # different self's
+    x = Cls()
+    y = x.fun(1)
+    assert list(x.foo.values())[0][0] == y
