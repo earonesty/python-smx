@@ -1,0 +1,5 @@
+site_name: Smx
+repo_url: https://github.com/earonesty/python-smx
+nav:
+    - Home: index.md
+docs_dir: docs

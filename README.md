@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.com/earonesty/python-smx.svg?branch=master)](https://travis-ci.com/earonesty/python-smx)
+[![Coverage](https://codecov.io/gh/earonesty/python-smx/branch/master/graph/badge.svg)](https://codecov.io/gh/earonesty/python-smx)
 
 ### Simple python templates
 
@@ -76,6 +77,5 @@ Or from python:
 
 ### Caveats
 
-Important to remember that all macros result in "strings", so when dealing with macros.
-
-
+ - Important to remember that all macros result in "strings", not other python types.
+ - When context-oriented template programming gets complex, you probably shouldn't be using templates.

@@ -560,6 +560,18 @@ def test_if():
     res = ctx.expand("%if(sys.platform == 'nada',T,F)")
     assert res == "F"
 
+def test_escape():
+    ctx = Smx()
+    res = ctx.expand("%%")
+    assert res == "%"
+    res = ctx.expand("%%%add(1,1)")
+    assert res == "%2"
+
+def test_os():
+    ctx = Smx()
+    ret = ctx.expand("%os.path.basename(/foo/bar)")
+    assert ret == "bar"
+
 def test_module():
     ctx = Smx()
     res = ctx.expand("%module(platform)%platform.system%")
