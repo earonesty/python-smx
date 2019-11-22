@@ -4,7 +4,7 @@ import os, sys, io
 import six
 import logging
 
-__version__ = "0.9.4"
+__version__ = "0.9.5"
 
 from tempfile import NamedTemporaryFile
 
