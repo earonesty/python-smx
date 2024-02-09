@@ -404,7 +404,7 @@ def test_main():
     t = time.monotonic() + 1
     while time.monotonic() < t:
         try:
-            assert requests.get("http://127.0.0.1:8001").text == "88"
+            assert requests.get("http://127.0.0.1:8001", timeout=60).text == "88"
         except requests.ConnectionError:
             continue
 
