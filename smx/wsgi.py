@@ -153,9 +153,8 @@ class SmxWsgi:
                         jq = {}
                 # elif ... handle more stuff
 
-                query = env.get('QUERY_STRING')
 
-                if query:
+                if query := env.get('QUERY_STRING'):
                     params = parse_query_string(query)
                 else:
                     params = {}
@@ -196,9 +195,8 @@ class SmxWsgi:
                 raise HttpError(500, type(e).__name__ + " : " + str(e), traceback.format_exc())
         except HttpError as e:
             try:
-                response = e.body
 
-                if response is None:
+                if (response := e.body) is None:
                     response = "<h1>%s %s</h1><p>An error was encountered processing your request</p>" % (e.code, e.msg or "Error")
 
                 headers = [('Content-Type', 'text/html'), ("Content-Length", str(len(response)))]
