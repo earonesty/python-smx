@@ -179,7 +179,7 @@ class Smx:
         return str(fo.getvalue())
 
     def expand_file(self, file_name, output_stream=None, in_place=False):
-        log.debug("expand file %s" % file_name)
+        log.debug("expand file %s", file_name)
         fi = io.open(file_name)
 
         self.__fi_name = file_name
