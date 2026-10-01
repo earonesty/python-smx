@@ -1,17 +1,27 @@
 [build-system]
-requires = ["flit"]
-build-backend = "flit.buildapi"
+requires = ["flit_core>=3.2,<4"]
+build-backend = "flit_core.buildapi"
 
-[tool.flit.metadata]
-module = "smx"
-author = "Erik Aronesty"
-author-email = "erik@q32.com"
-home-page = "https://github.com/earonesty/python-smx"
-description-file="README.md"
-classifiers=["Intended Audience :: Developers",
+[project]
+name = "smx"
+authors = [{name = "Erik Aronesty", email = "erik@q32.com"}]
+readme = "README.md"
+dynamic = ["version", "description"]
+requires-python = ">=3.6"
+dependencies = ["six>=1.10"]
+classifiers = [
+    "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
-[tool.flit.scripts]
+
+[project.urls]
+Homepage = "https://github.com/earonesty/python-smx"
+Issues = "https://github.com/earonesty/python-smx/issues"
+
+[project.optional-dependencies]
+test = ["pytest>=4.4", "pytest-cov", "pytest-xdist"]
+
+[project.scripts]
 smx = "smx.smx:main"

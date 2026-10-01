@@ -4,7 +4,7 @@ import os, sys, io
 import six
 import logging
 
-__version__ = "0.9.5"
+from . import __version__
 
 from tempfile import NamedTemporaryFile
 
@@ -76,7 +76,8 @@ class Smx:
 
     @macro
     def include(self, f):
-        return open(f).read()
+        with open(f) as stream:
+            return stream.read()
 
     @macro
     def indent(self, data, n=None):
@@ -124,13 +125,14 @@ class Smx:
         j_names = ','.join(args)
         defs = ""
         for arg in args:
-            defs += "    self._Smx__locals['" + arg + "']=" + arg + "\n"
+            defs += "        self._Smx__locals['" + arg + "']=" + arg + "\n"
         code = """def _tmp(self, """ + j_names + """):
     self.push_local({})
+    try:
 """ + defs + """
-    self.__res = self.expand('''""" + body + """''')
-    self.pop_local()
-    return self.__res
+        return self.expand('''""" + body + """''')
+    finally:
+        self.pop_local()
 """
         locs = {}
         exec(code, globals(), locs)
@@ -141,7 +143,7 @@ class Smx:
             self.__locals = self.__stack.pop()
 
     def push_local(self, x):
-        self.__stack.append(x)
+        self.__stack.append(self.__locals)
         self.__locals = x 
 
     @macro
@@ -180,24 +182,26 @@ class Smx:
 
     def expand_file(self, file_name, output_stream=None, in_place=False):
         log.debug("expand file %s" % file_name)
-        fi = io.open(file_name)
-
         self.__fi_name = file_name
         self.__fi_lno = 1
 
-        if in_place:
-            fo = NamedTemporaryFile(prefix=file_name, dir=os.path.dirname(file_name) or ".", delete=False, mode="w")
-        elif output_stream:
-            fo = output_stream
-        else:
-            log.debug("using stdout")
-            fo = sys.stdout
+        with io.open(file_name) as fi:
+            if in_place:
+                fo = NamedTemporaryFile(prefix=file_name, dir=os.path.dirname(file_name) or ".", delete=False, mode="w")
+            elif output_stream:
+                fo = output_stream
+            else:
+                log.debug("using stdout")
+                fo = sys.stdout
 
-        self.expand_io(fi, fo)
+            try:
+                self.expand_io(fi, fo)
+            finally:
+                if in_place:
+                    fo.close()
 
         if in_place:
-            fo.close()
-            os.rename(fo.name, file_name) 
+            os.rename(fo.name, file_name)
 
     def expand_io(self, fi, fo, term=[], in_c=None):
         c = in_c or fi.read(1)
@@ -606,7 +610,37 @@ def test_file():
 
     # inplace
     Smx().expand_file(f.name, in_place=True)
-    res = str(open(f.name).read())
+    with open(f.name) as stream:
+        res = stream.read()
     assert res == "012"
 
     os.unlink(f.name)
+
+
+def test_define_nested_scope():
+    ctx = Smx()
+    ctx.set("val", "outer")
+    assert ctx.expand('%define(host,"https://mysite.com/")'
+                      '%define(link,%host()%val%,val)') == ""
+    assert ctx.expand("%host()") == "https://mysite.com/"
+    assert ctx.expand("%host%") == "https://mysite.com/"
+    assert ctx.expand("%link(page)") == "https://mysite.com/page"
+    assert ctx.expand("%link(other)") == "https://mysite.com/other"
+    assert ctx.expand("%val%") == "outer"
+
+
+def test_define_restores_scope_after_error():
+    import pytest
+    ctx = Smx()
+    ctx.set("val", "outer")
+    ctx.expand("%define(broken,%missing%,val)")
+    with pytest.raises(NameError):
+        ctx.expand("%broken(inner)")
+    assert ctx.expand("%val%") == "outer"
+
+
+def test_quote_suppresses_argument_expansion():
+    ctx = Smx()
+    ctx.set("val", "expanded")
+    assert ctx.expand("%strip('%val%)") == "%val%"
+    assert ctx.expand("%eval('1 + 1)") == "2"
