@@ -1,5 +1,4 @@
-[![Build Status](https://travis-ci.com/earonesty/python-smx.svg?branch=master)](https://travis-ci.com/earonesty/python-smx)
-[![Coverage](https://codecov.io/gh/earonesty/python-smx/branch/master/graph/badge.svg)](https://codecov.io/gh/earonesty/python-smx)
+[![Tests](https://github.com/earonesty/python-smx/actions/workflows/tests.yml/badge.svg)](https://github.com/earonesty/python-smx/actions/workflows/tests.yml)
 
 ### Simple python templates
 
@@ -17,7 +16,7 @@
 
 Allows simple macros to be expanded inline.  You can `from smx import Smx` to evaluate, or evaluate from the command line.   Options to import all env vars, or modules from the command line are available.  Macros can be nested... so `%expand(%include(...))` is a valid syntax.
 
-Used for yml templates, config files, kubernates deployments, simple HTML pages, etc.
+Used for yml templates, config files, Kubernetes deployments, simple HTML pages, etc.
 
 ### Install
     pip install smx
@@ -38,6 +37,40 @@ Or from python:
    ctx.expand_io(fin, fout)
    ctx.expand_file(filename, in_place=True)
 ```
+
+### Defining macros
+
+Use `%define(name,body,arg1,arg2,...)` to define a macro. The body is saved
+without expansion, then expanded when you call the macro. Arguments are strings
+available inside the body as `%arg1%`, `%arg2%`, etc.
+
+```text
+%define(host,"https://mysite.com/")
+%define(link,%host()%val%,val)
+%link(page)
+```
+
+The final line expands to `https://mysite.com/page`. The definitions produce no
+output; `function define returned None` in debug logging is expected.
+`%host()` and `%host%` both call the constant macro; bare `%host` is incomplete.
+Adjacent expansions concatenate strings, so `%eval` is unnecessary here.
+`%eval(%host() + val)` inserts an unquoted URL into a Python expression and
+therefore raises a syntax error.
+
+Calls to defined macros temporarily bind their arguments and restore the caller's variables
+on return, including after an expansion error.
+
+### Quoting and expansion
+
+SMX arguments are template text, rather than Python expressions. Double quotes
+can enclose an argument containing commas; the surrounding quotes are removed.
+A leading apostrophe (`'`) suppresses expansion of that argument and has no
+closing apostrophe. For example, `%strip('%host%)` returns the literal `%host%`.
+The second argument of `define` is already saved without expansion.
+
+The apostrophe in `%eval('math.factorial(int(val)))` in `test_defmacro` is this
+SMX marker: it is removed before the expression reaches Python. `%eval` evaluates
+a Python expression; `%python` can also execute Python statements.
 
 ### Including code and files
 
@@ -76,9 +109,25 @@ Or from python:
  - Easy to import python modules and use them in basically any string context
  - JSON and YAML template friendly
  - Use "as is" in most configuration contexts
- - Unsafe by default, but trivial to use "Safe mode" allowing untrusted execution of a strict set of macro expansions
+ - Templates run with Python access and should come from trusted authors.
 
 ### Caveats
 
  - Important to remember that all macros result in "strings", not other python types.
  - When context-oriented template programming gets complex, you probably shouldn't be using templates.
+
+### Development
+
+```sh
+python -m venv .venv
+. .venv/bin/activate
+python -m pip install -r reqs.txt
+./test.sh
+```
+
+### Background
+
+SMX takes inspiration from the Server Macro Expansion syntax in the 1990s
+Commerce Builder web server. This is a standalone Python implementation with a
+small macro vocabulary; compatibility with legacy templates is partial.
+See the [earlier SMX project](https://github.com/earonesty/smx) for historical context.

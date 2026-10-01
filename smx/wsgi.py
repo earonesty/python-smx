@@ -388,24 +388,21 @@ def test_include():
     assert res.data == b'yyyxxx'
 
 
-def test_main():
-    import threading
-
-    app = app_fixture(test_env=True)
-    app.create("index.smx", "%add(44,44)")
-
+def test_main(monkeypatch, capsys):
+    from unittest.mock import Mock
     import sys
-    sys.argv = ["smx", "-r", app.root, '-p' '8001']
+    import wsgiref.simple_server
 
-    t = threading.Thread(target=main, daemon=True)
-    import requests
-    t.start()
-    import time
-    t = time.monotonic() + 1
-    while time.monotonic() < t:
-        try:
-            assert requests.get("http://127.0.0.1:8001", timeout=60).text == "88"
-        except requests.ConnectionError:
-            continue
+    app = app_fixture()
+    server = Mock()
+    make_server = Mock(return_value=server)
+    monkeypatch.setattr(wsgiref.simple_server, "make_server", make_server)
+    monkeypatch.setattr(sys, "argv", ["smx", "-r", app.root, "-p", "8001"])
+    main()
 
-
+    args = make_server.call_args[0]
+    assert args[:2] == ("", 8001)
+    assert isinstance(args[2], SmxWsgi)
+    assert args[2].root == app.root
+    server.serve_forever.assert_called_once_with()
+    assert "Serving on port 8001" in capsys.readouterr().out
